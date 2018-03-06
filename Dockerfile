@@ -7,8 +7,8 @@ RUN apk upgrade --no-cache \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo '${TZ}' > /etc/timezone \
     && rm -rf /var/cache/apk/*
-# 添加nginx与php全家桶
-RUN apk add --no-cache nginx php7-fpm php7-mcrypt php7-soap php7-openssl php7-gmp php7-pdo_odbc php7-json php7-dom php7-pdo php7-zip php7-mysqli php7-sqlite3 php7-apcu php7-pdo_pgsql php7-bcmath php7-gd php7-odbc php7-pdo_mysql php7-pdo_sqlite php7-gettext php7-xmlreader php7-xmlrpc php7-bz2 php7-memcached php7-iconv php7-pdo_dblib php7-curl php7-ctype php7-mbstring \
+# 添加nginx、php全家桶、mysql
+RUN apk add --no-cache nginx mariadb mariadb-client php7-fpm php7-mcrypt php7-soap php7-openssl php7-gmp php7-pdo_odbc php7-json php7-dom php7-pdo php7-zip php7-mysqli php7-sqlite3 php7-apcu php7-pdo_pgsql php7-bcmath php7-gd php7-odbc php7-pdo_mysql php7-pdo_sqlite php7-gettext php7-xmlreader php7-xmlrpc php7-bz2 php7-memcached php7-iconv php7-pdo_dblib php7-curl php7-ctype php7-mbstring \
     && rm -rf /var/cache/apk/*
 RUN adduser -D -g 'www' www && \
     mkdir /www && \
@@ -16,7 +16,7 @@ RUN adduser -D -g 'www' www && \
     chown -R www:www /www && \
     cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.orig
 COPY nginx.conf /etc/nginx/
-# 配置环境变量
+# 配置PHP
 ENV PHP_FPM_USER="www"
 ENV PHP_FPM_GROUP="www"
 ENV PHP_FPM_LISTEN_MODE="0660"
@@ -28,6 +28,13 @@ ENV PHP_DISPLAY_ERRORS="On"
 ENV PHP_DISPLAY_STARTUP_ERRORS="On"
 ENV PHP_ERROR_REPORTING="E_COMPILE_ERROR\|E_RECOVERABLE_ERROR\|E_ERROR\|E_CORE_ERROR"
 ENV PHP_CGI_FIX_PATHINFO=0
+# 配置mysql
+ENV DB_DATA_PATH="/var/lib/mysql"
+ENV DB_ROOT_PASS="root_password"
+ENV DB_USER="mariadb_user"
+ENV DB_PASS="mariadb_user_password"
+ENV MAX_ALLOWED_PACKET="200M"
+# 更新PHP配置
 RUN sed -i "s|;listen.owner\s*=\s*nobody|listen.owner = ${PHP_FPM_USER}|g" /etc/php7/php-fpm.conf && \
     sed -i "s|;listen.group\s*=\s*nobody|listen.group = ${PHP_FPM_GROUP}|g" /etc/php7/php-fpm.conf && \
     sed -i "s|;listen.mode\s*=\s*0660|listen.mode = ${PHP_FPM_LISTEN_MODE}|g" /etc/php7/php-fpm.conf && \
@@ -45,6 +52,16 @@ RUN sed -i "s|display_errors\s*=\s*Off|display_errors = ${PHP_DISPLAY_ERRORS}|i"
     sed -i "s|;*date.timezone =.*|date.timezone = ${TZ}|i" /etc/php7/php.ini #config timezone
 # /etc/php7/php-fpm.conf
 # /etc/php7/php.ini
+# 更新mysql配置
+RUN mysql_install_db --user=mysql --datadir=${DB_DATA_PATH} \
+&& mysqladmin -u root password "${DB_ROOT_PASS}" \
+&& echo "GRANT ALL ON *.* TO ${DB_USER}@'127.0.0.1' IDENTIFIED BY '${DB_PASS}' WITH GRANT OPTION;" > /tmp/sql \
+&& echo "GRANT ALL ON *.* TO ${DB_USER}@'localhost' IDENTIFIED BY '${DB_PASS}' WITH GRANT OPTION;" >> /tmp/sql \
+&& echo "GRANT ALL ON *.* TO ${DB_USER}@'::1' IDENTIFIED BY '${DB_PASS}' WITH GRANT OPTION;" >> /tmp/sql \
+&& echo "DELETE FROM mysql.user WHERE User='';" >> /tmp/sql \
+&& echo "DROP DATABASE test;" >> /tmp/sql \
+&& echo "FLUSH PRIVILEGES;" >> /tmp/sql \
+&& cat /tmp/sql | mysql -u root --password="${DB_ROOT_PASS}" 
 ADD etc /etc
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
 && apk --update --no-cache add unzip git supervisor sudo openssl openssh dbus bash \
