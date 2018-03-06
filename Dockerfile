@@ -62,7 +62,7 @@ WORKDIR /www
 RUN unzip /www/phpmyadmin4.7.9.zip \
 && mv /www/phpmyadmin-RELEASE_4_7_9/* /www \
 && rm -rf /www/phpmyadmin4.7.9.zip phpmyadmin-RELEASE_4_7_9 \
-&& chown -R www:www /www \
+&& chown -R www:www /www
 # End websites adding
 COPY entrypoint.sh /usr/sbin/
 EXPOSE 80
