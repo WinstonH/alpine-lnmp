@@ -51,17 +51,7 @@ RUN sed -i "s|display_errors\s*=\s*Off|display_errors = ${PHP_DISPLAY_ERRORS}|i"
     sed -i "s|;*cgi.fix_pathinfo=.*|cgi.fix_pathinfo= ${PHP_CGI_FIX_PATHINFO}|i" /etc/php7/php.ini && \
     sed -i "s|;*date.timezone =.*|date.timezone = ${TZ}|i" /etc/php7/php.ini #config timezone
 # /etc/php7/php-fpm.conf
-# /etc/php7/php.ini
-# 更新mysql配置
-RUN mysql_install_db --user=mysql --datadir=${DB_DATA_PATH} \
-&& mysqladmin -u root password "${DB_ROOT_PASS}" \
-&& echo "GRANT ALL ON *.* TO ${DB_USER}@'127.0.0.1' IDENTIFIED BY '${DB_PASS}' WITH GRANT OPTION;" > /tmp/sql \
-&& echo "GRANT ALL ON *.* TO ${DB_USER}@'localhost' IDENTIFIED BY '${DB_PASS}' WITH GRANT OPTION;" >> /tmp/sql \
-&& echo "GRANT ALL ON *.* TO ${DB_USER}@'::1' IDENTIFIED BY '${DB_PASS}' WITH GRANT OPTION;" >> /tmp/sql \
-&& echo "DELETE FROM mysql.user WHERE User='';" >> /tmp/sql \
-&& echo "DROP DATABASE test;" >> /tmp/sql \
-&& echo "FLUSH PRIVILEGES;" >> /tmp/sql \
-&& cat /tmp/sql | mysql -u root --password="${DB_ROOT_PASS}" 
+# /etc/php7/php.ini 
 ADD etc /etc
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
 && apk --update --no-cache add unzip git supervisor sudo openssl openssh dbus bash \
