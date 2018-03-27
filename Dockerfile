@@ -7,8 +7,8 @@ RUN apk upgrade --no-cache \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
     && echo '${TZ}' > /etc/timezone \
     && rm -rf /var/cache/apk/*
-# 添加nginx、php全家桶、mysql
-RUN apk add --no-cache nginx mariadb mariadb-client php7-fpm php7-mcrypt php7-soap php7-openssl php7-gmp php7-pdo_odbc php7-json php7-dom php7-pdo php7-zip php7-mysqli php7-sqlite3 php7-apcu php7-pdo_pgsql php7-bcmath php7-gd php7-odbc php7-pdo_mysql php7-pdo_sqlite php7-gettext php7-xmlreader php7-xmlrpc php7-bz2 php7-memcached php7-iconv php7-pdo_dblib php7-curl php7-ctype php7-mbstring \
+# 添加init、nginx、php全家桶、mysql
+RUN apk add --no-cache openrc openrc-dev nginx mariadb mariadb-client php7-fpm php7-mcrypt php7-soap php7-openssl php7-gmp php7-pdo_odbc php7-json php7-dom php7-pdo php7-zip php7-mysqli php7-sqlite3 php7-apcu php7-pdo_pgsql php7-bcmath php7-gd php7-odbc php7-pdo_mysql php7-pdo_sqlite php7-gettext php7-xmlreader php7-xmlrpc php7-bz2 php7-memcached php7-iconv php7-pdo_dblib php7-curl php7-ctype php7-mbstring \
     && rm -rf /var/cache/apk/*
 RUN adduser -D -g 'www' www && \
     mkdir /www && \
